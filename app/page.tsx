@@ -174,7 +174,7 @@ export default function QuotationPage() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-slate-200/40">
       {/* Dynamic Header */}
       <header className="fixed top-0 left-0 right-0 h-20 md:h-24 bg-primary text-white z-50 flex items-center justify-center shadow-lg transition-all duration-500 overflow-hidden">
         <div className="container flex items-center justify-center gap-6 md:gap-12 h-full px-4 text-center">
@@ -206,7 +206,7 @@ export default function QuotationPage() {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 p-6 md:p-10"
+          className="bg-white rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.1)] p-6 md:p-10 border border-slate-100"
         >
           <div className="mb-8 text-center">
             <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Nova Cotação</h2>
@@ -225,7 +225,7 @@ export default function QuotationPage() {
                   {...register("razaoFaturamento")}
                   className={cn(
                     "w-full p-3 border-2 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none transition-all appearance-none bg-slate-50",
-                    errors.razaoFaturamento ? "border-error bg-red-50" : "border-slate-100 hover:border-slate-200"
+                    errors.razaoFaturamento ? "border-error bg-red-50" : "border-primary/30 hover:border-primary/50"
                   )}
                 >
                   <option value="">Selecione a unidade de faturamento...</option>
@@ -258,7 +258,7 @@ export default function QuotationPage() {
                     {...register("cliente")}
                     className={cn(
                       "w-full p-3 border-2 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none transition-all",
-                      errors.cliente ? "border-error bg-red-50" : "border-slate-100 bg-slate-50/50 hover:bg-white"
+                      errors.cliente ? "border-error bg-red-50" : "border-primary/30 bg-slate-50/50 hover:bg-white hover:border-primary/50"
                     )}
                   />
                 </div>
@@ -268,7 +268,7 @@ export default function QuotationPage() {
                     {...register("att")}
                     className={cn(
                       "w-full p-3 border-2 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none transition-all",
-                      errors.att ? "border-error bg-red-50" : "border-slate-100 bg-slate-50/50 hover:bg-white"
+                      errors.att ? "border-error bg-red-50" : "border-primary/30 bg-slate-50/50 hover:bg-white hover:border-primary/50"
                     )}
                   />
                 </div>
@@ -278,7 +278,7 @@ export default function QuotationPage() {
                     {...register("respComercial")}
                     className={cn(
                       "w-full p-3 border-2 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none transition-all",
-                      errors.respComercial ? "border-error bg-red-50" : "border-slate-100 bg-slate-50/50 hover:bg-white"
+                      errors.respComercial ? "border-error bg-red-50" : "border-primary/30 bg-slate-50/50 hover:bg-white hover:border-primary/50"
                     )}
                   />
                 </div>
@@ -373,7 +373,7 @@ export default function QuotationPage() {
                         <select
                           value={tempProduct.desc || ""}
                           onChange={(e) => setTempProduct({ ...tempProduct, desc: e.target.value })}
-                          className="w-full p-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none appearance-none"
+                          className="w-full p-3 bg-white border-2 border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none appearance-none hover:border-primary/50 transition-all"
                         >
                           <option value="">Selecione um produto...</option>
                           {PRODUCT_DESCRIPTIONS.map(d => <option key={d} value={d}>{d}</option>)}
@@ -387,7 +387,7 @@ export default function QuotationPage() {
                             value={tempProduct.med || ""}
                             onChange={(e) => setTempProduct({ ...tempProduct, med: e.target.value.toUpperCase() })}
                             placeholder="Ex: 50x50"
-                            className="w-full p-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none"
+                            className="w-full p-3 bg-white border-2 border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none hover:border-primary/50 transition-all"
                           />
                         </div>
                         <div className="space-y-1">
@@ -396,7 +396,7 @@ export default function QuotationPage() {
                             value={tempProduct.qtd || ""}
                             onChange={(e) => setTempProduct({ ...tempProduct, qtd: applyMask(e.target.value) })}
                             placeholder="0"
-                            className="w-full p-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none"
+                            className="w-full p-3 bg-white border-2 border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none hover:border-primary/50 transition-all"
                           />
                         </div>
                         <div className="space-y-1">
@@ -404,7 +404,7 @@ export default function QuotationPage() {
                           <select
                             value={tempProduct.un || "KG"}
                             onChange={(e) => setTempProduct({ ...tempProduct, un: e.target.value })}
-                            className="w-full p-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none"
+                            className="w-full p-3 bg-white border-2 border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none hover:border-primary/50 transition-all"
                           >
                             <option value="KG">KG</option>
                             <option value="und">UND</option>
@@ -417,7 +417,7 @@ export default function QuotationPage() {
                             value={tempProduct.ipi || ""}
                             onChange={(e) => setTempProduct({ ...tempProduct, ipi: e.target.value })}
                             placeholder="0"
-                            className="w-full p-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none"
+                            className="w-full p-3 bg-white border-2 border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none hover:border-primary/50 transition-all"
                           />
                         </div>
                       </div>
@@ -429,7 +429,7 @@ export default function QuotationPage() {
                             value={tempProduct.icms || ""}
                             onChange={(e) => setTempProduct({ ...tempProduct, icms: e.target.value })}
                             placeholder="0"
-                             className="w-full p-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none"
+                             className="w-full p-3 bg-white border-2 border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none hover:border-primary/50 transition-all"
                           />
                         </div>
                         <div className="space-y-1">
@@ -438,7 +438,7 @@ export default function QuotationPage() {
                             value={tempProduct.cif || ""}
                             onChange={(e) => setTempProduct({ ...tempProduct, cif: e.target.value })}
                             placeholder="0,00"
-                            className="w-full p-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none"
+                            className="w-full p-3 bg-white border-2 border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none hover:border-primary/50 transition-all"
                           />
                         </div>
                         <div className="space-y-1">
@@ -447,7 +447,7 @@ export default function QuotationPage() {
                             value={tempProduct.fob || ""}
                             onChange={(e) => setTempProduct({ ...tempProduct, fob: e.target.value })}
                             placeholder="0,00"
-                            className="w-full p-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none"
+                            className="w-full p-3 bg-white border-2 border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none hover:border-primary/50 transition-all"
                           />
                         </div>
                       </div>
@@ -487,7 +487,7 @@ export default function QuotationPage() {
                     {...register("pagamento")}
                     className={cn(
                       "w-full p-3 border-2 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none transition-all",
-                      errors.pagamento ? "border-error bg-red-50" : "border-slate-100 bg-white"
+                      errors.pagamento ? "border-error bg-red-50" : "border-primary/30 bg-white hover:border-primary/50"
                     )}
                   />
                 </div>
@@ -497,7 +497,7 @@ export default function QuotationPage() {
                     {...register("prazo")}
                     className={cn(
                       "w-full p-3 border-2 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none transition-all",
-                      errors.prazo ? "border-error bg-red-50" : "border-slate-100 bg-white"
+                      errors.prazo ? "border-error bg-red-50" : "border-primary/30 bg-white hover:border-primary/50"
                     )}
                   />
                 </div>
@@ -507,7 +507,7 @@ export default function QuotationPage() {
                     {...register("validade")}
                     className={cn(
                       "w-full p-3 border-2 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none transition-all",
-                      errors.validade ? "border-error bg-red-50" : "border-slate-100 bg-white"
+                      errors.validade ? "border-error bg-red-50" : "border-primary/30 bg-white hover:border-primary/50"
                     )}
                   />
                 </div>
@@ -516,7 +516,7 @@ export default function QuotationPage() {
                    <textarea
                     {...register("obs")}
                     rows={3}
-                    className="w-full p-4 border-2 border-slate-100 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none transition-all bg-white resize-none"
+                    className="w-full p-4 border-2 border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none transition-all bg-white resize-none hover:border-primary/50"
                     placeholder="Informações complementares sobre a cotação..."
                   />
                 </div>
