@@ -78,7 +78,12 @@ export default function QuotationPage() {
   // Temp product state
   const [tempProduct, setTempProduct] = useState<Partial<Product>>({ un: "KG" });
 
+  const processingRef = React.useRef(false);
+
   const onSubmit = async (data: QuotationFormValues) => {
+    if (processingRef.current) return;
+    processingRef.current = true;
+    
     setIsGenerating(true);
     setPdfUrl(null);
     try {
@@ -87,19 +92,18 @@ export default function QuotationPage() {
       const url = await generateQuotationPdf(data);
       
       setPdfUrl(url);
-      setPdfName(`COTACAO_${data.cliente.toUpperCase()}.pdf`);
+      setPdfName(`COTACAO_${data.cliente.toUpperCase().replace(/\s+/g, '_')}.pdf`);
       
     } catch (error) {
       console.error("Erro ao gerar PDF:", error);
       alert("Erro ao gerar o PDF da cotação.");
       setIsGenerating(false);
+    } finally {
+      processingRef.current = false;
     }
   };
 
   const handleNewQuotation = () => {
-    if (pdfUrl) {
-      URL.revokeObjectURL(pdfUrl);
-    }
     setPdfUrl(null);
     reset({
       cliente: "",

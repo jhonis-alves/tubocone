@@ -218,8 +218,7 @@ export const generateQuotationPdf = async (data: QuotationData) => {
   doc.setFontSize(7);
   doc.text(`${faturamento.nome} | ${faturamento.rod}`, 105, 290, { align: "center" });
 
-  // --- SOLUÇÃO PARA MOBILE: Retorna o Blob URL para download manual ---
-  const blob = doc.output('blob');
-  return URL.createObjectURL(blob);
+  // --- SOLUÇÃO PARA MOBILE: Retorna o Data URI para download manual ---
+  return doc.output('datauristring');
 };
 
