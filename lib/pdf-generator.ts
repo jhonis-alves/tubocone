@@ -6,7 +6,7 @@ export const generateQuotationPdf = async (data: QuotationData) => {
   const { default: jsPDF } = await import('jspdf');
   const { default: autoTable } = await import('jspdf-autotable');
   
-  const doc = new jsPDF("p", "mm", "a4");
+  const doc = new jsPDF("p", "mm", "a4", true);
   const azulDark: [number, number, number] = [30, 58, 110];
   const faturamento = FATURAMENTOS[data.razaoFaturamento];
 
@@ -24,7 +24,8 @@ export const generateQuotationPdf = async (data: QuotationData) => {
     
     // Check if logo is a valid PNG base64 to avoid "wrong PNG signature"
     if (logoBase64 && logoBase64.startsWith('data:image/png')) {
-      doc.addImage(logoBase64, 'PNG', 12, 5, 40, 25);
+      // Usar compressão 'FAST' para reduzir tamanho do PDF
+      doc.addImage(logoBase64, 'PNG', 12, 5, 40, 25, undefined, 'FAST');
     } else {
       // Fallback: Desenha um logo vetorial limpo se não houver PNG válido
       // Isso evita o erro "wrong PNG signature" com SVGs que o jsPDF não suporta nativamente em addImage
@@ -218,7 +219,7 @@ export const generateQuotationPdf = async (data: QuotationData) => {
   doc.setFontSize(7);
   doc.text(`${faturamento.nome} | ${faturamento.rod}`, 105, 290, { align: "center" });
 
-  // --- SOLUÇÃO PARA MOBILE: Retorna o Data URI para download manual ---
-  return doc.output('datauristring');
+  // --- SOLUÇÃO PARA MOBILE: Retorna o Blob para download eficiente ---
+  return doc.output('blob');
 };
 

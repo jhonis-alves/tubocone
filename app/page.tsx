@@ -89,8 +89,13 @@ export default function QuotationPage() {
     try {
       // Garantir que a animação seja visível (mínimo 1 segundo)
       await new Promise(resolve => setTimeout(resolve, 1000));
-      const url = await generateQuotationPdf(data);
+      const blob = await generateQuotationPdf(data);
       
+      if (pdfUrl) {
+        URL.revokeObjectURL(pdfUrl);
+      }
+      
+      const url = URL.createObjectURL(blob);
       setPdfUrl(url);
       setPdfName(`COTACAO_${data.cliente.toUpperCase().replace(/\s+/g, '_')}.pdf`);
       
@@ -104,6 +109,9 @@ export default function QuotationPage() {
   };
 
   const handleNewQuotation = () => {
+    if (pdfUrl) {
+      URL.revokeObjectURL(pdfUrl);
+    }
     setPdfUrl(null);
     reset({
       cliente: "",
