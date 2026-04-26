@@ -40,6 +40,8 @@ export default function QuotationPage() {
   const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfName, setPdfName] = useState("");
 
   const {
     register,
@@ -78,32 +80,41 @@ export default function QuotationPage() {
 
   const onSubmit = async (data: QuotationFormValues) => {
     setIsGenerating(true);
+    setPdfUrl(null);
     try {
       // Garantir que a animação seja visível (mínimo 1 segundo)
       await new Promise(resolve => setTimeout(resolve, 1000));
-      await generateQuotationPdf(data);
+      const url = await generateQuotationPdf(data);
       
-      // Limpa os campos para uma nova cotação
-      reset({
-        cliente: "",
-        att: "",
-        respComercial: data.respComercial, // Mantém o responsável comercial
-        razaoFaturamento: data.razaoFaturamento, // Mantém a unidade selecionada por conveniência
-        pagamento: "",
-        prazo: "",
-        validade: "",
-        obs: "",
-        produtos: [],
-      });
-      setEditingIndex(null);
-      setIsAddingProduct(false);
+      setPdfUrl(url);
+      setPdfName(`COTACAO_${data.cliente.toUpperCase()}.pdf`);
       
     } catch (error) {
       console.error("Erro ao gerar PDF:", error);
       alert("Erro ao gerar o PDF da cotação.");
-    } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleNewQuotation = () => {
+    if (pdfUrl) {
+      URL.revokeObjectURL(pdfUrl);
+    }
+    setPdfUrl(null);
+    reset({
+      cliente: "",
+      att: "",
+      respComercial: watch("respComercial"), // Mantém o responsável comercial
+      razaoFaturamento: watch("razaoFaturamento"), // Mantém a unidade selecionada
+      pagamento: "",
+      prazo: "",
+      validade: "",
+      obs: "",
+      produtos: [],
+    });
+    setEditingIndex(null);
+    setIsAddingProduct(false);
+    setIsGenerating(false);
   };
 
   const handleAddProduct = () => {
@@ -529,7 +540,7 @@ export default function QuotationPage() {
       </main>
 
       <AnimatePresence>
-        {isGenerating && (
+        {isGenerating && !pdfUrl && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -549,6 +560,49 @@ export default function QuotationPage() {
               <div>
                 <h3 className="text-xl font-bold text-slate-800">Gerando Cotação</h3>
                 <p className="text-slate-500 text-sm mt-1">Isso pode levar alguns segundos. Por favor, aguarde enquanto preparamos o seu documento.</p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {pdfUrl && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              className="bg-white p-8 rounded-[32px] shadow-2xl flex flex-col items-center gap-6 max-w-sm w-full text-center relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-2 bg-primary" />
+              <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center">
+                <Check className="w-10 h-10 text-green-500" />
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-2xl font-bold text-slate-800">Pronto!</h3>
+                <p className="text-slate-500 text-sm">Sua cotação foi gerada com sucesso e está pronta para o download.</p>
+              </div>
+
+              <div className="w-full space-y-3">
+                <a
+                  href={pdfUrl}
+                  download={pdfName}
+                  className="w-full py-4 bg-primary text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-primary/30 hover:bg-primary/90 transition-all active:scale-[0.98]"
+                >
+                  <FileText className="w-5 h-5" />
+                  BAIXAR COTAÇÃO PDF
+                </a>
+                
+                <button
+                  onClick={handleNewQuotation}
+                  className="w-full py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-all active:scale-[0.98]"
+                >
+                  FAZER NOVA COTAÇÃO
+                </button>
               </div>
             </motion.div>
           </motion.div>

@@ -6,7 +6,7 @@ export const generateQuotationPdf = async (data: QuotationData) => {
   const { default: jsPDF } = await import('jspdf');
   const { default: autoTable } = await import('jspdf-autotable');
   
-  const doc = new jsPDF("p", "mm", "a4", true);
+  const doc = new jsPDF("p", "mm", "a4");
   const azulDark: [number, number, number] = [30, 58, 110];
   const faturamento = FATURAMENTOS[data.razaoFaturamento];
 
@@ -211,12 +211,15 @@ export const generateQuotationPdf = async (data: QuotationData) => {
   doc.setFont("helvetica", "normal");
   doc.text("Responsável Comercial", 160, ySig + 5, { align: "center" });
 
+  // --- RODAPÉ AZUL ---
   doc.setFillColor(...azulDark);
   doc.rect(0, 282, 210, 15, "F");
   doc.setTextColor(255);
   doc.setFontSize(7);
   doc.text(`${faturamento.nome} | ${faturamento.rod}`, 105, 290, { align: "center" });
 
-  doc.save(`COTACAO_${data.cliente.toUpperCase()}.pdf`);
+  // --- SOLUÇÃO PARA MOBILE: Retorna o Blob URL para download manual ---
+  const blob = doc.output('blob');
+  return URL.createObjectURL(blob);
 };
 
