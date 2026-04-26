@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Plus, Trash2, Edit2, FileText, X, Check, Search } from "lucide-react";
+import { Plus, Trash2, Edit2, FileText, X, Check, Search, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
 import { FATURAMENTOS, PRODUCT_DESCRIPTIONS, LOGO_TUBOCONE, LOGO_TUBONORD } from "@/lib/constants";
@@ -39,6 +39,7 @@ type QuotationFormValues = z.infer<typeof quotationSchema>;
 export default function QuotationPage() {
   const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const {
     register,
@@ -47,6 +48,7 @@ export default function QuotationPage() {
     watch,
     setValue,
     resetField,
+    reset,
     formState: { errors },
   } = useForm<QuotationFormValues>({
     resolver: zodResolver(quotationSchema),
@@ -75,11 +77,32 @@ export default function QuotationPage() {
   const [tempProduct, setTempProduct] = useState<Partial<Product>>({ un: "KG" });
 
   const onSubmit = async (data: QuotationFormValues) => {
+    setIsGenerating(true);
     try {
+      // Garantir que a animação seja visível (mínimo 1 segundo)
+      await new Promise(resolve => setTimeout(resolve, 1000));
       await generateQuotationPdf(data);
+      
+      // Limpa os campos para uma nova cotação
+      reset({
+        cliente: "",
+        att: "",
+        respComercial: data.respComercial, // Mantém o responsável comercial
+        razaoFaturamento: data.razaoFaturamento, // Mantém a unidade selecionada por conveniência
+        pagamento: "",
+        prazo: "",
+        validade: "",
+        obs: "",
+        produtos: [],
+      });
+      setEditingIndex(null);
+      setIsAddingProduct(false);
+      
     } catch (error) {
       console.error("Erro ao gerar PDF:", error);
       alert("Erro ao gerar o PDF da cotação.");
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -172,7 +195,7 @@ export default function QuotationPage() {
             <section className="space-y-4">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-1 h-5 bg-primary rounded-full" />
-                <h3 className="text-xs font-bold text-primary uppercase tracking-widest">Unidade Emissora</h3>
+                <h3 className="text-xs font-bold text-primary uppercase tracking-widest">RAZÃO SOCIAL DE FATURAMENTO</h3>
               </div>
               <div className="space-y-1">
                 <select
@@ -477,22 +500,60 @@ export default function QuotationPage() {
               </div>
             </section>
 
-            <div className="pt-6">
+            <div className="pt-6 relative">
                <button
                   type="submit"
-                  className="w-full py-5 bg-primary text-white rounded-2xl font-bold text-lg hover:bg-primary/95 transition-all shadow-2xl shadow-primary/30 flex items-center justify-center gap-3 group active:scale-[0.98]"
+                  disabled={isGenerating}
+                  className={cn(
+                    "w-full py-5 text-white rounded-2xl font-bold text-lg transition-all shadow-2xl flex items-center justify-center gap-3 group active:scale-[0.98]",
+                    isGenerating 
+                      ? "bg-slate-400 cursor-not-allowed shadow-none" 
+                      : "bg-primary hover:bg-primary/95 shadow-primary/30"
+                  )}
                 >
-                  <Plus className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
-                  GERAR COTAÇÃO PDF
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="w-6 h-6 animate-spin text-white" />
+                      GERANDO PDF...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
+                      GERAR COTAÇÃO PDF
+                    </>
+                  )}
                 </button>
             </div>
           </form>
         </motion.div>
-
-        <footer className="mt-8 text-center text-slate-400 text-[10px] font-medium uppercase tracking-[0.2em]">
-           &copy; {new Date().getFullYear()} Grupo Tubocone &bull; Tubonord &bull; Sistema Interno
-        </footer>
       </main>
+
+      <AnimatePresence>
+        {isGenerating && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-primary/20 backdrop-blur-sm flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white p-8 rounded-3xl shadow-2xl flex flex-col items-center gap-4 max-w-sm w-full text-center"
+            >
+              <div className="relative">
+                <Loader2 className="w-16 h-16 text-primary animate-spin" />
+                <FileText className="w-6 h-6 text-primary absolute inset-0 m-auto" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-slate-800">Gerando Cotação</h3>
+                <p className="text-slate-500 text-sm mt-1">Isso pode levar alguns segundos. Por favor, aguarde enquanto preparamos o seu documento.</p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
