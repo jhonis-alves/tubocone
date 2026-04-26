@@ -1,9 +1,11 @@
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { FATURAMENTOS, LOGO_TUBOCONE, LOGO_TUBONORD } from './constants';
 import { QuotationData, Product } from './types';
 
 export const generateQuotationPdf = async (data: QuotationData) => {
+  // Use dynamic imports for jspdf to ensure it works in client context
+  const { default: jsPDF } = await import('jspdf');
+  const { default: autoTable } = await import('jspdf-autotable');
+  
   const doc = new jsPDF("p", "mm", "a4", true);
   const azulDark: [number, number, number] = [30, 58, 110];
   const faturamento = FATURAMENTOS[data.razaoFaturamento];
