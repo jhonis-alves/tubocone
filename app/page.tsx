@@ -300,7 +300,7 @@ export default function QuotationPage() {
                   <button
                     type="button"
                     onClick={() => setIsAddingProduct(true)}
-                    className="w-full py-4 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400 hover:border-primary/30 hover:text-primary hover:bg-primary/[0.02] transition-all flex items-center justify-center gap-2 text-sm font-bold"
+                    className="w-full py-4 rounded-2xl bg-primary text-white hover:bg-primary/90 transition-all flex items-center justify-center gap-2 text-sm font-bold shadow-md active:scale-[0.98]"
                   >
                     <Plus className="w-5 h-5" /> Adicionar Produto
                   </button>
