@@ -87,8 +87,8 @@ export default function QuotationPage() {
     setIsGenerating(true);
     setPdfUrl(null);
     try {
-      // Garantir que a animação seja visível (mínimo 1 segundo)
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Garantir que a animação seja visível por pelo menos 2 segundos
+      await new Promise(resolve => setTimeout(resolve, 2000));
       const blob = await generateQuotationPdf(data);
       
       if (pdfUrl) {
@@ -408,7 +408,7 @@ export default function QuotationPage() {
                           >
                             <option value="KG">KG</option>
                             <option value="und">UND</option>
-                            <option value="pcs">PÇS</option>
+                            <option value="pcs">PEÇAS</option>
                           </select>
                         </div>
                         <div className="space-y-1">
@@ -433,7 +433,7 @@ export default function QuotationPage() {
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Unit. CIF</label>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Preço Unitário CIF</label>
                           <input
                             value={tempProduct.cif || ""}
                             onChange={(e) => setTempProduct({ ...tempProduct, cif: e.target.value })}
@@ -442,7 +442,7 @@ export default function QuotationPage() {
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Unit. FOB</label>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Preço Unitário FOB</label>
                           <input
                             value={tempProduct.fob || ""}
                             onChange={(e) => setTempProduct({ ...tempProduct, fob: e.target.value })}

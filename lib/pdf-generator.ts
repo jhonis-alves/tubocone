@@ -1,11 +1,9 @@
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { FATURAMENTOS, LOGO_TUBOCONE, LOGO_TUBONORD } from './constants';
 import { QuotationData, Product } from './types';
 
 export const generateQuotationPdf = async (data: QuotationData) => {
-  // Use dynamic imports for jspdf to ensure it works in client context
-  const { default: jsPDF } = await import('jspdf');
-  const { default: autoTable } = await import('jspdf-autotable');
-  
   const doc = new jsPDF("p", "mm", "a4", true);
   const azulDark: [number, number, number] = [30, 58, 110];
   const faturamento = FATURAMENTOS[data.razaoFaturamento];
@@ -77,35 +75,37 @@ export const generateQuotationPdf = async (data: QuotationData) => {
   doc.text(`Emissão: ${dataAtual}`, 195, 48, { align: "right" });
 
   // --- BOXES CLIENTE / FORNECEDOR ---
-  doc.setFillColor(245, 248, 254);
+  doc.setFillColor(232, 237, 247);
   doc.rect(15, 55, 85, 25, "F");
-  doc.setTextColor(150);
-  doc.setFontSize(7);
-  doc.text("RAZÃO SOCIAL DE FATURAMENTO (FORNECEDOR)", 18, 59);
+  doc.setTextColor(100);
+  doc.setFontSize(10.5);
+  doc.text("RAZÃO SOCIAL DE FATURAMENTO", 18, 59.5);
 
   doc.setTextColor(0);
-  doc.setFontSize(8);
+  doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
   const nomeExibir = faturamento.subnome
     ? `${faturamento.nome} (${faturamento.subnome})`
     : faturamento.nome;
-  doc.text(nomeExibir, 18, 64, { maxWidth: 80 });
+  doc.text(nomeExibir, 18, 65, { maxWidth: 80 });
   doc.setFont("helvetica", "normal");
-  doc.text("CNPJ: " + faturamento.cnpj, 18, 75);
+  doc.setFontSize(9);
+  doc.text("CNPJ: " + faturamento.cnpj, 18, 76);
 
   // Box Cliente
-  doc.setFillColor(250, 250, 250);
+  doc.setFillColor(232, 237, 247);
   doc.rect(110, 55, 85, 25, "F");
-  doc.setTextColor(150);
-  doc.setFontSize(7);
-  doc.text("CLIENTE", 113, 59);
+  doc.setTextColor(100);
+  doc.setFontSize(10.5);
+  doc.text("CLIENTE", 113, 59.5);
   doc.setTextColor(0);
-  doc.setFontSize(8);
+  doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
-  doc.text(data.cliente.toUpperCase(), 113, 64, { maxWidth: 80 });
+  doc.text(data.cliente.toUpperCase(), 113, 65, { maxWidth: 80 });
   doc.setFont("helvetica", "normal");
   doc.setTextColor(80);
-  doc.text("SOLICITADO POR: " + data.att.toUpperCase(), 113, 74);
+  doc.setFontSize(9);
+  doc.text("SOLICITADO POR: " + data.att.toUpperCase(), 113, 76);
 
   // --- TABELA DE PRODUTOS ---
   const valorOk = (t: string | number) => {
@@ -121,8 +121,8 @@ export const generateQuotationPdf = async (data: QuotationData) => {
     { header: "UND", key: "un" as keyof Product },
     { header: "IPI", key: "ipi" as keyof Product, suffix: "%", checkValor: true },
     { header: "ICMS", key: "icms" as keyof Product, suffix: "%", checkValor: true },
-    { header: "VALOR CIF", key: "cif" as keyof Product, prefix: "R$ ", isMonetary: true, checkValor: true },
-    { header: "VALOR FOB", key: "fob" as keyof Product, prefix: "R$ ", isMonetary: true, checkValor: true },
+    { header: "PREÇO UNITÁRIO CIF", key: "cif" as keyof Product, prefix: "R$ ", isMonetary: true, checkValor: true },
+    { header: "PREÇO UNITÁRIO FOB", key: "fob" as keyof Product, prefix: "R$ ", isMonetary: true, checkValor: true },
   ];
 
   // Filter columns that have at least one valid value in any product
@@ -141,10 +141,32 @@ export const generateQuotationPdf = async (data: QuotationData) => {
 
   const rows = data.produtos.map((p) => {
     return activeColsDef.map(col => {
-      const val = p[col.key];
+      let val = p[col.key];
+      
+      // --- MAPEAMENTO DE UNIDADES ---
+      if (col.key === "un" && val?.toString().toLowerCase() === "pcs") {
+        val = "PC";
+      }
       
       if (col.checkValor) {
-        return valorOk(val) ? (col.prefix || "") + val + (col.suffix || "") : "---";
+        if (!valorOk(val)) return "---";
+        
+        let displayVal = val.toString();
+        
+        // Formatação monetária (garantir duas casas decimais no padrão PT-BR)
+        if (col.isMonetary) {
+          // Se não houver vírgula, adiciona ",00"
+          if (!displayVal.includes(",")) {
+            displayVal += ",00";
+          } else {
+            // Se houver vírgula, garante que tenha 2 dígitos após ela
+            const partes = displayVal.split(",");
+            if (partes[1].length === 0) displayVal += "00";
+            else if (partes[1].length === 1) displayVal += "0";
+          }
+        }
+        
+        return (col.prefix || "") + displayVal + (col.suffix || "");
       }
       
       if (val === undefined || val === null || val.toString().trim() === "") {
@@ -159,8 +181,8 @@ export const generateQuotationPdf = async (data: QuotationData) => {
     startY: 90,
     head: [cols],
     body: rows,
-    headStyles: { fillColor: azulDark, fontSize: 8, halign: "center" },
-    bodyStyles: { fontSize: 7, halign: "center" },
+    headStyles: { fillColor: azulDark, fontSize: 9, halign: "center" },
+    bodyStyles: { fontSize: 8.5, halign: "center" },
     theme: "grid",
   });
 
@@ -176,41 +198,42 @@ export const generateQuotationPdf = async (data: QuotationData) => {
   for (let i = 0; i < 3; i++) {
     let x = 15 + i * 62;
     doc.setFillColor(232, 237, 247);
-    doc.rect(x, y, 58, 15, "F");
+    doc.rect(x, y, 58, 20, "F");
     doc.setTextColor(100);
-    doc.setFontSize(7);
-    doc.text(conds[i], x + 5, y + 5);
+    doc.setFontSize(10.5);
+    doc.text(conds[i], x + 5, y + 6);
     doc.setTextColor(azulDark[0], azulDark[1], azulDark[2]);
-    doc.setFontSize(9);
+    doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
-    doc.text(vals[i], x + 5, y + 11);
+    doc.text(vals[i], x + 5, y + 14);
   }
 
-  y += 25;
+  y += 30;
   const observacaoTexto = data.obs.trim();
-  doc.setFillColor(245, 245, 245);
-  doc.rect(15, y, 180, 20, "F");
-  doc.setFontSize(8);
+  doc.setFillColor(232, 237, 247);
+  doc.rect(15, y, 180, 25, "F");
+  doc.setFontSize(11);
   doc.setTextColor(100);
   doc.setFont("helvetica", "bold");
-  doc.text("OBSERVAÇÕES:", 18, y + 5);
+  doc.text("OBSERVAÇÕES:", 18, y + 6);
 
   if (observacaoTexto) {
+    doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(0);
     const linhasObs = doc.splitTextToSize(observacaoTexto.toUpperCase(), 174);
-    doc.text(linhasObs, 18, y + 10);
+    doc.text(linhasObs, 18, y + 12);
   }
 
-  let ySig = y + 40;
+  let ySig = y + 45;
   doc.setTextColor(0);
-  doc.setFontSize(9);
+  doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
   doc.text(data.respComercial.toUpperCase(), 160, ySig - 2, { align: "center" });
   doc.line(130, ySig, 190, ySig);
-  doc.setFontSize(8);
+  doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
-  doc.text("Responsável Comercial", 160, ySig + 5, { align: "center" });
+  doc.text("Responsável Comercial", 160, ySig + 6, { align: "center" });
 
   // --- RODAPÉ AZUL ---
   doc.setFillColor(...azulDark);
