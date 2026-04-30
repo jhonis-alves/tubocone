@@ -21,8 +21,8 @@ const nextConfig: NextConfig = {
     ],
   },
   output: 'export',
-  basePath: '/tubocone',
-  assetPrefix: '/tubocone/',
+  basePath: '/emissor-de-cotacao',
+  assetPrefix: '/emissor-de-cotacao/',
   trailingSlash: true,
   webpack: (config, {dev}) => {
     // HMR is disabled in AI Studio via DISABLE_HMR env var.

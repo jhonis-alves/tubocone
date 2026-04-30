@@ -189,8 +189,9 @@ export const generateQuotationPdf = async (data: QuotationData) => {
   // --- CONDIÇÕES E ASSINATURA ---
   let y = (doc as any).lastAutoTable.finalY + 15;
   const conds = ["PRAZO ENTREGA", "COND. PAGAMENTO", "VALIDADE DA COTAÇÃO"];
+  const displayPrazo = /^\d+$/.test(data.prazo.trim()) ? `${data.prazo.trim()} DIAS` : data.prazo;
   const vals = [
-    data.prazo + " DIAS",
+    displayPrazo,
     data.pagamento + " DIAS",
     data.validade + " DIAS",
   ];

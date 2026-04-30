@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Plus, Trash2, Edit2, FileText, X, Check, Search, Loader2 } from "lucide-react";
+import { Plus, Trash2, Edit2, FileText, X, Check, Search, Loader2, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
 import { FATURAMENTOS, PRODUCT_DESCRIPTIONS, LOGO_TUBOCONE, LOGO_TUBONORD } from "@/lib/constants";
@@ -42,6 +42,7 @@ export default function QuotationPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pdfName, setPdfName] = useState("");
+  const [prazoMode, setPrazoMode] = useState<"programacao" | "manual">("programacao");
 
   const {
     register,
@@ -60,7 +61,7 @@ export default function QuotationPage() {
       att: "",
       respComercial: "",
       pagamento: "",
-      prazo: "",
+      prazo: "Conforme programação",
       validade: "",
       obs: "",
       produtos: [],
@@ -91,14 +92,22 @@ export default function QuotationPage() {
       await new Promise(resolve => setTimeout(resolve, 2000));
       const blob = await generateQuotationPdf(data);
       
-      if (pdfUrl) {
-        URL.revokeObjectURL(pdfUrl);
-      }
-      
+      const fileName = `COTACAO_${data.cliente.toUpperCase().replace(/\s+/g, '_')}.pdf`;
       const url = URL.createObjectURL(blob);
-      setPdfUrl(url);
-      setPdfName(`COTACAO_${data.cliente.toUpperCase().replace(/\s+/g, '_')}.pdf`);
       
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Pequeno delay para revogar a URL com segurança
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      
+      // Definimos como true apenas para mostrar a tela de sucesso, mas sem o blob pesado
+      setPdfUrl("done"); 
+      setIsGenerating(false);
     } catch (error) {
       console.error("Erro ao gerar PDF:", error);
       alert("Erro ao gerar o PDF da cotação.");
@@ -113,13 +122,14 @@ export default function QuotationPage() {
       URL.revokeObjectURL(pdfUrl);
     }
     setPdfUrl(null);
+    setPrazoMode("programacao");
     reset({
       cliente: "",
       att: "",
       respComercial: watch("respComercial"), // Mantém o responsável comercial
       razaoFaturamento: watch("razaoFaturamento"), // Mantém a unidade selecionada
       pagamento: "",
-      prazo: "",
+      prazo: "Conforme programação",
       validade: "",
       obs: "",
       produtos: [],
@@ -220,11 +230,11 @@ export default function QuotationPage() {
                 <div className="w-1 h-5 bg-primary rounded-full" />
                 <h3 className="text-xs font-bold text-primary uppercase tracking-widest">RAZÃO SOCIAL DE FATURAMENTO</h3>
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1 relative">
                 <select
                   {...register("razaoFaturamento")}
                   className={cn(
-                    "w-full p-3 border-2 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none transition-all appearance-none bg-slate-50",
+                    "w-full p-3 pr-10 border-2 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none transition-all appearance-none bg-slate-50",
                     errors.razaoFaturamento ? "border-error bg-red-50" : "border-primary/30 hover:border-primary/50"
                   )}
                 >
@@ -239,6 +249,9 @@ export default function QuotationPage() {
                     <option value="palmeiras_matriz">PALMEIRAS (Matriz)</option>
                   </optgroup>
                 </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                  <ChevronDown className="w-5 h-5" />
+                </div>
                 {errors.razaoFaturamento && (
                   <p className="text-[10px] text-red-500 font-bold ml-2 uppercase tracking-wide">{errors.razaoFaturamento.message}</p>
                 )}
@@ -368,16 +381,21 @@ export default function QuotationPage() {
                     </div>
 
                     <div className="space-y-4">
-                      <div className="space-y-1">
+                      <div className="space-y-1 relative">
                         <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Descrição</label>
-                        <select
-                          value={tempProduct.desc || ""}
-                          onChange={(e) => setTempProduct({ ...tempProduct, desc: e.target.value })}
-                          className="w-full p-3 bg-white border-2 border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none appearance-none hover:border-primary/50 transition-all"
-                        >
-                          <option value="">Selecione um produto...</option>
-                          {PRODUCT_DESCRIPTIONS.map(d => <option key={d} value={d}>{d}</option>)}
-                        </select>
+                        <div className="relative">
+                          <select
+                            value={tempProduct.desc || ""}
+                            onChange={(e) => setTempProduct({ ...tempProduct, desc: e.target.value })}
+                            className="w-full p-3 pr-10 bg-white border-2 border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none appearance-none hover:border-primary/50 transition-all text-sm"
+                          >
+                            <option value="">Selecione um produto...</option>
+                            {PRODUCT_DESCRIPTIONS.map(d => <option key={d} value={d}>{d}</option>)}
+                          </select>
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                            <ChevronDown className="w-4 h-4" />
+                          </div>
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -387,7 +405,7 @@ export default function QuotationPage() {
                             value={tempProduct.med || ""}
                             onChange={(e) => setTempProduct({ ...tempProduct, med: e.target.value.toUpperCase() })}
                             placeholder="Ex: 50x50"
-                            className="w-full p-3 bg-white border-2 border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none hover:border-primary/50 transition-all"
+                            className="w-full p-3 bg-white border-2 border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none hover:border-primary/50 transition-all text-sm"
                           />
                         </div>
                         <div className="space-y-1">
@@ -396,20 +414,25 @@ export default function QuotationPage() {
                             value={tempProduct.qtd || ""}
                             onChange={(e) => setTempProduct({ ...tempProduct, qtd: applyMask(e.target.value) })}
                             placeholder="0"
-                            className="w-full p-3 bg-white border-2 border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none hover:border-primary/50 transition-all"
+                            className="w-full p-3 bg-white border-2 border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none hover:border-primary/50 transition-all text-sm"
                           />
                         </div>
                         <div className="space-y-1">
                           <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Unidade</label>
-                          <select
-                            value={tempProduct.un || "KG"}
-                            onChange={(e) => setTempProduct({ ...tempProduct, un: e.target.value })}
-                            className="w-full p-3 bg-white border-2 border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none hover:border-primary/50 transition-all"
-                          >
-                            <option value="KG">KG</option>
-                            <option value="und">UND</option>
-                            <option value="pcs">PEÇAS</option>
-                          </select>
+                          <div className="relative">
+                            <select
+                              value={tempProduct.un || "KG"}
+                              onChange={(e) => setTempProduct({ ...tempProduct, un: e.target.value })}
+                              className="w-full p-3 pr-8 bg-white border-2 border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none appearance-none hover:border-primary/50 transition-all text-sm"
+                            >
+                              <option value="KG">KG</option>
+                              <option value="und">UND</option>
+                              <option value="pcs">PEÇAS</option>
+                            </select>
+                            <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                              <ChevronDown className="w-4 h-4" />
+                            </div>
+                          </div>
                         </div>
                         <div className="space-y-1">
                           <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">IPI %</label>
@@ -417,7 +440,7 @@ export default function QuotationPage() {
                             value={tempProduct.ipi || ""}
                             onChange={(e) => setTempProduct({ ...tempProduct, ipi: e.target.value })}
                             placeholder="0"
-                            className="w-full p-3 bg-white border-2 border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none hover:border-primary/50 transition-all"
+                            className="w-full p-3 bg-white border-2 border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none hover:border-primary/50 transition-all text-sm"
                           />
                         </div>
                       </div>
@@ -429,25 +452,25 @@ export default function QuotationPage() {
                             value={tempProduct.icms || ""}
                             onChange={(e) => setTempProduct({ ...tempProduct, icms: e.target.value })}
                             placeholder="0"
-                             className="w-full p-3 bg-white border-2 border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none hover:border-primary/50 transition-all"
+                             className="w-full p-3 bg-white border-2 border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none hover:border-primary/50 transition-all text-sm"
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Preço Unitário CIF</label>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Preço CIF</label>
                           <input
                             value={tempProduct.cif || ""}
                             onChange={(e) => setTempProduct({ ...tempProduct, cif: e.target.value })}
                             placeholder="0,00"
-                            className="w-full p-3 bg-white border-2 border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none hover:border-primary/50 transition-all"
+                            className="w-full p-3 bg-white border-2 border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none hover:border-primary/50 transition-all text-sm"
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Preço Unitário FOB</label>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Preço FOB</label>
                           <input
                             value={tempProduct.fob || ""}
                             onChange={(e) => setTempProduct({ ...tempProduct, fob: e.target.value })}
                             placeholder="0,00"
-                            className="w-full p-3 bg-white border-2 border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none hover:border-primary/50 transition-all"
+                            className="w-full p-3 bg-white border-2 border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none hover:border-primary/50 transition-all text-sm"
                           />
                         </div>
                       </div>
@@ -492,14 +515,44 @@ export default function QuotationPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                   <label className="text-[11px] font-bold text-slate-500 uppercase ml-1">Prazo Entrega (Dias)</label>
-                   <input
-                    {...register("prazo")}
-                    className={cn(
-                      "w-full p-3 border-2 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none transition-all",
-                      errors.prazo ? "border-error bg-red-50" : "border-primary/30 bg-white hover:border-primary/50"
-                    )}
-                  />
+                   <label className="text-[11px] font-bold text-slate-500 uppercase ml-1">Prazo Entrega</label>
+                   <div className="relative">
+                      <select
+                        value={prazoMode}
+                        onChange={(e) => {
+                          const val = e.target.value as "programacao" | "manual";
+                          setPrazoMode(val);
+                          if (val === "programacao") {
+                            setValue("prazo", "Conforme programação");
+                          } else {
+                            setValue("prazo", "");
+                          }
+                        }}
+                        className="w-full p-3 pr-10 border-2 border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none transition-all bg-white hover:border-primary/50 appearance-none cursor-pointer"
+                      >
+                        <option value="programacao">Conforme programação</option>
+                        <option value="manual">Inserir manualmente</option>
+                      </select>
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                        <ChevronDown className="w-5 h-5" />
+                      </div>
+                   </div>
+                   {prazoMode === "manual" && (
+                     <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-2"
+                     >
+                       <input
+                        {...register("prazo")}
+                        placeholder="Digite o prazo..."
+                        className={cn(
+                          "w-full p-3 border-2 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none transition-all",
+                          errors.prazo ? "border-error bg-red-50" : "border-primary/30 bg-white hover:border-primary/50"
+                        )}
+                       />
+                     </motion.div>
+                   )}
                 </div>
                 <div className="space-y-1">
                    <label className="text-[11px] font-bold text-slate-500 uppercase ml-1">Validade (Dias)</label>
@@ -595,24 +648,16 @@ export default function QuotationPage() {
               </div>
               
               <div className="space-y-2">
-                <h3 className="text-2xl font-bold text-slate-800">Pronto!</h3>
-                <p className="text-slate-500 text-sm">Sua cotação foi gerada com sucesso e está pronta para o download.</p>
+                <h3 className="text-2xl font-bold text-slate-800">Sucesso!</h3>
+                <p className="text-slate-500 text-sm">Sua cotação foi gerada e o download iniciado.</p>
               </div>
 
               <div className="w-full space-y-3">
-                <a
-                  href={pdfUrl}
-                  download={pdfName}
+                <button
+                  onClick={handleNewQuotation}
                   className="w-full py-4 bg-primary text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-primary/30 hover:bg-primary/90 transition-all active:scale-[0.98]"
                 >
                   <FileText className="w-5 h-5" />
-                  BAIXAR COTAÇÃO PDF
-                </a>
-                
-                <button
-                  onClick={handleNewQuotation}
-                  className="w-full py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-all active:scale-[0.98]"
-                >
                   FAZER NOVA COTAÇÃO
                 </button>
               </div>
