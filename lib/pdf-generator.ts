@@ -22,8 +22,11 @@ export const generateQuotationPdf = async (data: QuotationData) => {
     
     // Check if logo is a valid PNG base64 to avoid "wrong PNG signature"
     if (logoBase64 && logoBase64.startsWith('data:image/png')) {
-      // Usar compressão 'FAST' para reduzir tamanho do PDF
-      doc.addImage(logoBase64, 'PNG', 12, 5, 40, 25, undefined, 'FAST');
+      const imgProps = doc.getImageProperties(logoBase64);
+      const width = 28; 
+      const height = (imgProps.height * width) / imgProps.width;
+      const yPos = (35 - height) / 2;
+      doc.addImage(logoBase64, 'PNG', 12, yPos, width, height, undefined, 'FAST');
     } else {
       // Fallback: Desenha um logo vetorial limpo se não houver PNG válido
       // Isso evita o erro "wrong PNG signature" com SVGs que o jsPDF não suporta nativamente em addImage
@@ -189,10 +192,11 @@ export const generateQuotationPdf = async (data: QuotationData) => {
   // --- CONDIÇÕES E ASSINATURA ---
   let y = (doc as any).lastAutoTable.finalY + 15;
   const conds = ["PRAZO ENTREGA", "COND. PAGAMENTO", "VALIDADE DA COTAÇÃO"];
-  const displayPrazo = /^\d+$/.test(data.prazo.trim()) ? `${data.prazo.trim()} DIAS` : data.prazo;
+  const displayPrazo = /^[0-9/]+$/.test(data.prazo.trim()) ? `${data.prazo.trim()} DIAS` : data.prazo;
+  const displayPagamento = /^[0-9/]+$/.test(data.pagamento.trim()) ? `${data.pagamento.trim()} DIAS` : data.pagamento;
   const vals = [
     displayPrazo,
-    data.pagamento + " DIAS",
+    displayPagamento,
     data.validade + " DIAS",
   ];
 

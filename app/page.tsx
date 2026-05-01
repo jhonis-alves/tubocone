@@ -43,6 +43,7 @@ export default function QuotationPage() {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pdfName, setPdfName] = useState("");
   const [prazoMode, setPrazoMode] = useState<"programacao" | "manual">("programacao");
+  const [pagamentoMode, setPagamentoMode] = useState<"antecipado" | "avista" | "obs" | "dias">("antecipado");
 
   const {
     register,
@@ -60,7 +61,7 @@ export default function QuotationPage() {
       cliente: "",
       att: "",
       respComercial: "",
-      pagamento: "",
+      pagamento: "Pag. Antecipado",
       prazo: "Conforme programação",
       validade: "",
       obs: "",
@@ -123,12 +124,13 @@ export default function QuotationPage() {
     }
     setPdfUrl(null);
     setPrazoMode("programacao");
+    setPagamentoMode("antecipado");
     reset({
       cliente: "",
       att: "",
       respComercial: watch("respComercial"), // Mantém o responsável comercial
       razaoFaturamento: watch("razaoFaturamento"), // Mantém a unidade selecionada
-      pagamento: "",
+      pagamento: "Pag. Antecipado",
       prazo: "Conforme programação",
       validade: "",
       obs: "",
@@ -505,14 +507,61 @@ export default function QuotationPage() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
                 <div className="space-y-1">
-                   <label className="text-[11px] font-bold text-slate-500 uppercase ml-1">Pagamento (Dias)</label>
-                   <input
-                    {...register("pagamento")}
-                    className={cn(
-                      "w-full p-3 border-2 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none transition-all",
-                      errors.pagamento ? "border-error bg-red-50" : "border-primary/30 bg-white hover:border-primary/50"
-                    )}
-                  />
+                   <label className="text-[11px] font-bold text-slate-500 uppercase ml-1">Cond. Pagamento</label>
+                   <div className="relative">
+                      <select
+                        value={pagamentoMode}
+                        onChange={(e) => {
+                          const val = e.target.value as "antecipado" | "avista" | "obs" | "dias";
+                          setPagamentoMode(val);
+                          if (val === "antecipado") setValue("pagamento", "Pag. Antecipado");
+                          else if (val === "avista") setValue("pagamento", "Á vista");
+                          else setValue("pagamento", "");
+                        }}
+                        className="w-full p-3 pr-10 border-2 border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none transition-all bg-white hover:border-primary/50 appearance-none cursor-pointer"
+                      >
+                        <option value="antecipado">Pag. Antecipado</option>
+                        <option value="avista">Á vista</option>
+                        <option value="obs">Observação especial</option>
+                        <option value="dias">Inserir em (dias)</option>
+                      </select>
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                        <ChevronDown className="w-5 h-5" />
+                      </div>
+                   </div>
+                   {pagamentoMode === "obs" && (
+                     <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mt-2 text-sm">
+                       <input
+                        {...register("pagamento")}
+                        placeholder="Descreva a condição..."
+                        className={cn(
+                          "w-full p-3 border-2 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none transition-all",
+                          errors.pagamento ? "border-error bg-red-50" : "border-primary/30 bg-white hover:border-primary/50"
+                        )}
+                       />
+                     </motion.div>
+                   )}
+                   {pagamentoMode === "dias" && (
+                     <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mt-2">
+                       <div className="relative">
+                         <input
+                          {...register("pagamento")}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/[^0-9/]/g, "");
+                            setValue("pagamento", val);
+                          }}
+                          placeholder="Ex: 30"
+                          className={cn(
+                            "w-full p-3 pr-12 border-2 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none transition-all",
+                            errors.pagamento ? "border-error bg-red-50" : "border-primary/30 bg-white hover:border-primary/50"
+                          )}
+                         />
+                         <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[10px] font-bold text-slate-400">
+                           DIAS
+                         </div>
+                       </div>
+                     </motion.div>
+                   )}
                 </div>
                 <div className="space-y-1">
                    <label className="text-[11px] font-bold text-slate-500 uppercase ml-1">Prazo Entrega</label>
