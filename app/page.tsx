@@ -550,7 +550,7 @@ export default function QuotationPage() {
                             const val = e.target.value.replace(/[^0-9/]/g, "");
                             setValue("pagamento", val);
                           }}
-                          placeholder="Ex: 30"
+                          placeholder="Ex: 30 ou 30/60"
                           className={cn(
                             "w-full p-3 pr-12 border-2 rounded-xl focus:ring-4 focus:ring-primary/10 outline-none transition-all",
                             errors.pagamento ? "border-error bg-red-50" : "border-primary/30 bg-white hover:border-primary/50"

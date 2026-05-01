@@ -207,10 +207,26 @@ export const generateQuotationPdf = async (data: QuotationData) => {
     doc.setTextColor(100);
     doc.setFontSize(10.5);
     doc.text(conds[i], x + 5, y + 6);
+    
     doc.setTextColor(azulDark[0], azulDark[1], azulDark[2]);
-    doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
-    doc.text(vals[i], x + 5, y + 14);
+    
+    // Ajustar texto com quebra de linha se necessário
+    const valText = vals[i].toUpperCase();
+    const lines = doc.splitTextToSize(valText, 48);
+    
+    // Ajustar tamanho da fonte se houver muitas linhas
+    if (lines.length > 2) {
+      doc.setFontSize(8);
+    } else if (lines.length > 1) {
+      doc.setFontSize(9);
+    } else {
+      doc.setFontSize(11);
+    }
+    
+    // Centralizar verticalmente o texto dentro do espaço restante do box
+    const textY = lines.length > 1 ? y + 11 : y + 14;
+    doc.text(lines, x + 5, textY);
   }
 
   y += 30;
